@@ -1,12 +1,12 @@
 Phalcon Framework
 =================
 
-Phalcon is a web framework implemented as a C extension offering high performance and lower resource consumption.
+Phalcon is an open source web framework delivered as a C extension for the PHP language providing high performance and lower resource consumption.
 
 Get Started
 -----------
 
-Phalcon is written in C with platform independence in mind. As a result, Phalcon is available on Microsoft Windows, GNU/Linux, and Mac OS X. You can either download a binary package for the system of your choice or build it from sources.
+Phalcon is written in Zephir/C with platform independence in mind. As a result, Phalcon is available on Microsoft Windows, GNU/Linux, and Mac OS X. You can either download a binary package for the system of your choice or build it from source.
 
 ### Windows
 
@@ -26,7 +26,7 @@ On a Unix-based platform you can easily compile and install the extension from s
 #### Requirements
 Prerequisite packages are:
 
-* PHP 5.3.x/5.4.x/5.5.x development resources
+* PHP 5.4.x/5.5.x/5.6.x development resources
 * GCC compiler (Linux/Solaris) or Xcode (Mac)
 
 Ubuntu:
@@ -70,8 +70,9 @@ External Links
 --------------
 
 * [Documentation](http://docs.phalconphp.com/)
-* [Support](http://phalconphp.com/support)
+* [Support](http://forum.phalconphp.com)
 * [Blog](http://blog.phalconphp.com)
+* [Zephir](http://zephir-lang.com/)
 * [Twitter](http://twitter.com/phalconphp)
 
 Current Build Status
@@ -87,7 +88,6 @@ Our community is developing amazing extra features for Phalcon every day via [In
 
 Just give it a try and help us improve Phalcon even more!
 
-
 License
 -------
-Phalcon is open source software licensed under the New BSD License. See the docs/LICENSE.txt file for more information.
+Phalcon is open source software licensed under the New BSD License. See the docs/LICENSE.txt file for more

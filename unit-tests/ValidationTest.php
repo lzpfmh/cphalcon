@@ -4,7 +4,7 @@
 	+------------------------------------------------------------------------+
 	| Phalcon Framework                                                      |
 	+------------------------------------------------------------------------+
-	| Copyright (c) 2011-2012 Phalcon Team (http://www.phalconphp.com)       |
+	| Copyright (c) 2011-2015 Phalcon Team (http://www.phalconphp.com)       |
 	+------------------------------------------------------------------------+
 	| This source file is subject to the New BSD License that is bundled     |
 	| with this package in the file docs/LICENSE.txt.                        |
@@ -27,7 +27,8 @@ use Phalcon\Validation\Validator\PresenceOf,
 	Phalcon\Validation\Validator\StringLength,
 	Phalcon\Validation\Validator\Email,
 	Phalcon\Validation\Validator\Between,
-	Phalcon\Validation\Validator\Url;
+	Phalcon\Validation\Validator\Url,
+	Phalcon\Validation\Validator\CreditCard;
 
 class ValidationTest extends PHPUnit_Framework_TestCase
 {
@@ -73,6 +74,8 @@ class ValidationTest extends PHPUnit_Framework_TestCase
 
 		$validation->add('last_name', new PresenceOf());
 
+		$validation->add('number', new PresenceOf());
+
 		$messages = $validation->validate($_POST);
 
 		$expectedMessages = Phalcon\Validation\Message\Group::__set_state(array(
@@ -89,12 +92,20 @@ class ValidationTest extends PHPUnit_Framework_TestCase
 					'_field' => 'last_name',
 					'_code' => '0',
 				)),
+				2 => Phalcon\Validation\Message::__set_state(array(
+					'_type' => 'PresenceOf',
+					'_message' => 'Field number is required',
+					'_field' => 'number',
+					'_code' => '0',
+				)),
 			)
 		));
 
 		$this->assertEquals($expectedMessages, $messages);
 
 		$_POST['last_name'] = 'Walter';
+
+		$_POST['number'] = '0';
 
 		$messages = $validation->validate($_POST);
 
@@ -172,7 +183,7 @@ class ValidationTest extends PHPUnit_Framework_TestCase
 		$validation = new Phalcon\Validation();
 
 		$validation->add('name', new Identical(array(
-			'value' => 'Peter'
+			'accepted' => 'Peter'
 		)));
 
 		$messages = $validation->validate($_POST);
@@ -197,6 +208,71 @@ class ValidationTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals(count($messages), 0);
 	}
 
+	public function providerCreditCardNumberValid()
+	{
+		return array(
+			array('378282246310005'), //amex
+			array('4012888888881881'), //visa
+			array('38520000023237'), //dinners
+			array('5105105105105100'), //mastercard
+			array('6011000990139424') //discover
+		);
+	}
+
+	/**
+	 * @dataProvider providerCreditCardNumberValid
+	 */
+	public function testValidationCreditCardValid($number)
+	{
+		$_POST = array('number' => $number);
+
+		$validation = new Phalcon\Validation();
+
+		$validation->add('number', new CreditCard());
+
+		$messages = $validation->validate($_POST);
+
+		$this->assertEquals(count($messages), 0);
+	}
+
+	public function providerCreditCardNumberInvalid()
+	{
+		return array(
+			array('1203191201121221'),
+			array('102030102320'),
+			array('120120s201023'),
+			array('20323200003230'),
+			array('12010012')
+		);
+	}
+
+	/**
+	 * @dataProvider providerCreditCardNumberInvalid
+	 */
+	public function testValidationCreditCardInvalid($number)
+	{
+		$_POST = array('number' => $number);
+
+		$validation = new Phalcon\Validation();
+
+		$validation->add('number', new CreditCard());
+
+		$messages = $validation->validate($_POST);
+
+		$expectedMessages = Phalcon\Validation\Message\Group::__set_state(array(
+			'_messages' => array(
+				0 => Phalcon\Validation\Message::__set_state(array(
+					'_type' => 'CreditCard',
+					'_message' => 'Field number is not valid for a credit card number',
+					'_field' => 'number',
+					'_code' => '0',
+				))
+			)
+		));
+
+		$this->assertEquals($expectedMessages, $messages);
+	}
+
 	public function testValidationIdenticalCustomMessage()
 	{
 		$_POST = array();
@@ -204,7 +280,7 @@ class ValidationTest extends PHPUnit_Framework_TestCase
 		$validation = new Phalcon\Validation();
 
 		$validation->add('name', new Identical(array(
-			'value' => 'Peter',
+			'accepted' => 'Peter',
 			'message' => 'The name must be peter'
 		)));
 
@@ -963,7 +1039,7 @@ class ValidationTest extends PHPUnit_Framework_TestCase
 		)));
 
 		$validation->setLabels(array('firstname' => 'First name'));
-                
+
 		$messages = $validation->validate($_POST);
 
 		$expectedMessages = Phalcon\Validation\Message\Group::__set_state(array(
@@ -996,5 +1072,11 @@ class ValidationTest extends PHPUnit_Framework_TestCase
 		));
 
 		$this->assertEquals($expectedMessages, $messages);
+	}
+
+	public function testGetDefaultValidationMessageShouldReturnEmptyStringIfNoneIsSet()
+	{
+		$validation = new \Phalcon\Validation();
+		$this->assertEmpty($validation->getDefaultMessage('_notexistentvalidationmessage_'));
 	}
 }

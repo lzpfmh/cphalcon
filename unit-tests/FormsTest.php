@@ -4,7 +4,7 @@
 	+------------------------------------------------------------------------+
 	| Phalcon Framework                                                      |
 	+------------------------------------------------------------------------+
-	| Copyright (c) 2011-2012 Phalcon Team (http://www.phalconphp.com)       |
+	| Copyright (c) 2011-2015 Phalcon Team (http://www.phalconphp.com)       |
 	+------------------------------------------------------------------------+
 	| This source file is subject to the New BSD License that is bundled     |
 	| with this package in the file docs/LICENSE.txt.                        |
@@ -22,9 +22,11 @@ use
 	Phalcon\Forms\Form,
 	Phalcon\Forms\Element\Text,
 	Phalcon\Forms\Element\Select,
+	Phalcon\Forms\Element\Radio,
 	Phalcon\Validation\Validator\PresenceOf,
 	Phalcon\Validation\Validator\StringLength,
-	Phalcon\Validation\Validator\Regex;
+	Phalcon\Validation\Validator\Regex,
+	Phalcon\Validation\Message;
 
 class ContactFormPublicProperties
 {
@@ -166,7 +168,7 @@ class FormsTest extends PHPUnit_Framework_TestCase
 		$element1 = new Text("name");
 		$element1->setAttributes(array('class' => 'big-input'));
 
-		$element2 = new \Phalcon\Forms\Element\Radio('radio');
+		$element2 = new Radio('radio');
 		$element2->setAttributes(array('value' => 0));
 
 		$this->assertEquals('<input type="text" id="name" name="name" class="big-input" />', $element1->render());
@@ -515,5 +517,27 @@ class FormsTest extends PHPUnit_Framework_TestCase
 		$element->setAttribute("id", NULL);
 
 		$this->assertEquals('<input type="text" name="name" class="big-input" />', $element->render());
+	}
+
+	public function testCorrectlyAddOptionToSelectElementIfParameterIsAnArray()
+	{
+		$element = new Select('test-select');
+		$element->addOption(array('key' => 'value'));
+
+		$this->assertEquals('<select id="test-select" name="test-select"><option value="key">value</option></select>', preg_replace('/[[:cntrl:]]/', '', $element->render()));
+	}
+
+	public function testCorrectlyAddOptionToSelectElementIfParameterIsAString()
+	{
+		$element = new Select('test-select');
+		$element->addOption('value');
+
+		$this->assertEquals('<select id="test-select" name="test-select"><option value="0">value</option></select>', preg_replace('/[[:cntrl:]]/', '', $element->render()));
+	}
+
+	public function testElementAppendMessage()
+	{
+		$element = new Select('test-select');
+		$element->appendMessage(new Message(''));
 	}
 }

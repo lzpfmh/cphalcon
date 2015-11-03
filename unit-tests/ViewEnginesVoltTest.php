@@ -4,7 +4,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2012 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -17,6 +17,8 @@
   |          Eduar Carvajal <eduar@phalconphp.com>                         |
   +------------------------------------------------------------------------+
 */
+
+use Phalcon\Mvc\View\Engine\Volt\Compiler;
 
 class SomeObject implements Iterator, Countable
 {
@@ -92,7 +94,7 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 	public function testVoltParser()
 	{
 
-		$volt = new \Phalcon\Mvc\View\Engine\Volt\Compiler();
+		$volt = new Compiler();
 
 		$intermediate = $volt->parse('');
 		$this->assertTrue(is_array($intermediate));
@@ -109,7 +111,6 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 
 		//Common Expressions
 		$intermediate = $volt->parse('hello');
-		$this->assertTrue(is_array($intermediate));
 		$this->assertEquals(count($intermediate), 1);
 
 		$intermediate = $volt->parse('{{ 1 }}');
@@ -490,6 +491,24 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue(is_array($intermediate));
 		$this->assertEquals(count($intermediate), 1);
 
+		$intermediate = $volt->parse('{% set a[0] = 1 %}');
+		$this->assertTrue(is_array($intermediate));
+
+		$intermediate = $volt->parse('{% set a[0][1] = 1 %}');
+		$this->assertTrue(is_array($intermediate));
+
+		$intermediate = $volt->parse('{% set a.y = 1 %}');
+		$this->assertTrue(is_array($intermediate));
+
+		$intermediate = $volt->parse('{% set a.y.x = 1 %}');
+		$this->assertTrue(is_array($intermediate));
+
+		$intermediate = $volt->parse('{% set a[0].y = 1 %}');
+		$this->assertTrue(is_array($intermediate));
+
+		$intermediate = $volt->parse('{% set a.y[0] = 1 %}');
+		$this->assertTrue(is_array($intermediate));
+
 		$intermediate = $volt->parse('{% do 1 %}');
 		$this->assertTrue(is_array($intermediate));
 		$this->assertEquals(count($intermediate), 1);
@@ -551,34 +570,30 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 		$intermediate = $volt->parse('{# some comment #}{{ "hello" }}{# other comment }}');
 		$this->assertTrue(is_array($intermediate));
 		$this->assertEquals(count($intermediate), 1);
-
 	}
 
 	public function testVoltSyntaxError()
 	{
-		$volt = new \Phalcon\Mvc\View\Engine\Volt\Compiler();
+		$volt = new Compiler();
 
 		try {
 			$volt->parse('{{');
 			$this->assertTrue(false);
-		}
-		catch(Phalcon\Mvc\View\Exception $e){
+		} catch (Phalcon\Mvc\View\Exception $e) {
 			$this->assertEquals($e->getMessage(), 'Syntax error, unexpected EOF in eval code');
 		}
 
 		try {
 			$volt->parse('{{ }}');
 			$this->assertTrue(false);
-		}
-		catch(Phalcon\Mvc\View\Exception $e){
+		} catch (Phalcon\Mvc\View\Exception $e) {
 			$this->assertEquals($e->getMessage(), 'Syntax error, unexpected EOF in eval code');
 		}
 
 		try {
 			$volt->parse('{{ ++v }}');
 			$this->assertTrue(false);
-		}
-		catch(Phalcon\Mvc\View\Exception $e){
+		} catch (Phalcon\Mvc\View\Exception $e) {
 			$this->assertEquals($e->getMessage(), 'Syntax error, unexpected token ++ in eval code on line 1');
 		}
 
@@ -586,8 +601,7 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 			$volt->parse('{{
 				++v }}');
 			$this->assertTrue(false);
-		}
-		catch(Phalcon\Mvc\View\Exception $e){
+		} catch (Phalcon\Mvc\View\Exception $e) {
 			$this->assertEquals($e->getMessage(), 'Syntax error, unexpected token ++ in eval code on line 2');
 		}
 
@@ -612,7 +626,7 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 			print_r($i);
 			$this->assertTrue(false);
 		}
-		catch(Phalcon\Mvc\View\Exception $e){
+		catch (Phalcon\Mvc\View\Exception $e){
 			$this->assertEquals($e->getMessage(), 'Syntax error, unexpected token DOT in eval code on line 3');
 		}
 
@@ -629,7 +643,7 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 			{% endblock %}');
 			$this->assertTrue(false);
 		}
-		catch(Phalcon\Mvc\View\Exception $e){
+		catch (Phalcon\Mvc\View\Exception $e){
 			$this->assertEquals($e->getMessage(), 'Syntax error, unexpected token IDENTIFIER(y) in eval code on line 8');
 		}
 
@@ -643,7 +657,7 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 			');
 			$this->assertTrue(false);
 		}
-		catch(Phalcon\Mvc\View\Exception $e){
+		catch (Phalcon\Mvc\View\Exception $e){
 			$this->assertEquals($e->getMessage(), 'Syntax error, unexpected token ~ in eval code on line 4');
 		}
 
@@ -665,7 +679,7 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 			$volt->compileString('{{ "hello"|unknown }}');
 			$this->assertTrue(false);
 		}
-		catch(Phalcon\Mvc\View\Exception $e){
+		catch (Phalcon\Mvc\View\Exception $e){
 			$this->assertEquals($e->getMessage(), 'Unknown filter "unknown" in eval code on line 1');
 		}
 
@@ -673,7 +687,7 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 			$volt->compileString('{{ "hello"|unknown(1, 2, 3) }}');
 			$this->assertTrue(false);
 		}
-		catch(Phalcon\Mvc\View\Exception $e){
+		catch (Phalcon\Mvc\View\Exception $e){
 			$this->assertEquals($e->getMessage(), 'Unknown filter "unknown" in eval code on line 1');
 		}
 
@@ -681,26 +695,9 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 			$volt->compileString('{{ "hello"|(a-1) }}');
 			$this->assertTrue(false);
 		}
-		catch(Phalcon\Mvc\View\Exception $e){
+		catch (Phalcon\Mvc\View\Exception $e){
 			$this->assertEquals($e->getMessage(), 'Unknown filter type in eval code on line 1');
 		}
-
-		try {
-			$volt->compileString('{{ unknown() }}');
-			$this->assertTrue(false);
-		}
-		catch(Phalcon\Mvc\View\Exception $e){
-			$this->assertEquals($e->getMessage(), "Undefined function 'unknown' in eval code on line 1");
-		}
-
-		try {
-			$volt->compileString('{{ dump(unknown()) }}');
-			$this->assertTrue(false);
-		}
-		catch(Phalcon\Mvc\View\Exception $e){
-			$this->assertEquals($e->getMessage(), "Undefined function 'unknown' in eval code on line 1");
-		}
-
 	}
 
 	public function testVoltExtendsError()
@@ -712,7 +709,7 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 			$volt->parse('{{ "hello"}}{% extends "some/file.volt" %}');
 			$this->assertTrue(false);
 		}
-		catch(Phalcon\Mvc\View\Exception $e){
+		catch (Phalcon\Mvc\View\Exception $e) {
 			$this->assertEquals($e->getMessage(), 'Extends statement must be placed at the first line in the template in eval code on line 1');
 		}
 
@@ -720,7 +717,7 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 			$volt->parse('<div>{% extends "some/file.volt" %}{% set a = 1 %}</div>');
 			$this->assertTrue(false);
 		}
-		catch(Phalcon\Mvc\View\Exception $e){
+		catch (Phalcon\Mvc\View\Exception $e) {
 			$this->assertEquals($e->getMessage(), 'Extends statement must be placed at the first line in the template in eval code on line 1');
 		}
 
@@ -728,7 +725,7 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 			$volt->parse('{% extends "some/file.volt" %}{{ "hello"}}');
 			$this->assertTrue(false);
 		}
-		catch(Phalcon\Mvc\View\Exception $e){
+		catch (Phalcon\Mvc\View\Exception $e) {
 			$this->assertEquals($e->getMessage(), 'Child templates only may contain blocks in eval code on line 1');
 		}
 
@@ -736,7 +733,7 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 			$volt->parse('{% extends "some/file.volt" %}{{% if true %}} {%endif%}');
 			$this->assertTrue(false);
 		}
-		catch(Phalcon\Mvc\View\Exception $e){
+		catch (Phalcon\Mvc\View\Exception $e) {
 			$this->assertEquals($e->getMessage(), 'Child templates only may contain blocks in eval code on line 1');
 		}
 
@@ -752,7 +749,7 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 			$volt->parse('{% extends "some/file.volt" %}{{% set a = 1 %}');
 			$this->assertTrue(false);
 		}
-		catch(Phalcon\Mvc\View\Exception $e){
+		catch (Phalcon\Mvc\View\Exception $e) {
 			$this->assertEquals($e->getMessage(), 'Child templates only may contain blocks in eval code on line 1');
 		}
 
@@ -761,7 +758,7 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 	public function testVoltCompiler()
 	{
 
-		$volt = new \Phalcon\Mvc\View\Engine\Volt\Compiler();
+		$volt = new Compiler();
 
 		$compilation = $volt->compileString('');
 		$this->assertEquals($compilation, '');
@@ -904,6 +901,9 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 		$compilation = $volt->compileString("{{ image('img/logo.png', 'width': 80) }}");
 		$this->assertEquals($compilation, "<?php echo \$this->tag->image(array('img/logo.png', 'width' => 80)); ?>");
 
+		$compilation = $volt->compileString("{{ email_field('email', 'class': 'form-control', 'placeholder': 'Email Address') }}");
+		$this->assertEquals($compilation, "<?php echo \$this->tag->emailField(array('email', 'class' => 'form-control', 'placeholder' => 'Email Address')); ?>");
+
 		//Filters
 		$compilation = $volt->compileString('{{ "hello"|e }}');
 		$this->assertEquals($compilation, '<?php echo $this->escaper->escapeHtml(\'hello\'); ?>');
@@ -946,6 +946,9 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 		$compilation = $volt->compileString('{% if a!=b %} hello {% endif %}');
 		$this->assertEquals($compilation, '<?php if ($a != $b) { ?> hello <?php } ?>');
 
+		$compilation = $volt->compileString('{% if a is not b %} hello {% endif %}');
+		$this->assertEquals($compilation, '<?php if ($a != $b) { ?> hello <?php } ?>');
+
 		$compilation = $volt->compileString('{% if a<b %} hello {% endif %}');
 		$this->assertEquals($compilation, '<?php if ($a < $b) { ?> hello <?php } ?>');
 
@@ -979,14 +982,26 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 		$compilation = $volt->compileString('{% if a is empty %} hello {% endif %}');
 		$this->assertEquals($compilation, '<?php if (empty($a)) { ?> hello <?php } ?>');
 
+		$compilation = $volt->compileString('{% if a is not empty %} hello {% endif %}');
+		$this->assertEquals($compilation, '<?php if (!empty($a)) { ?> hello <?php } ?>');
+
 		$compilation = $volt->compileString('{% if a is numeric %} hello {% endif %}');
 		$this->assertEquals($compilation, '<?php if (is_numeric($a)) { ?> hello <?php } ?>');
+
+		$compilation = $volt->compileString('{% if a is not numeric %} hello {% endif %}');
+		$this->assertEquals($compilation, '<?php if (!is_numeric($a)) { ?> hello <?php } ?>');
 
 		$compilation = $volt->compileString('{% if a is scalar %} hello {% endif %}');
 		$this->assertEquals($compilation, '<?php if (is_scalar($a)) { ?> hello <?php } ?>');
 
+		$compilation = $volt->compileString('{% if a is not scalar %} hello {% endif %}');
+		$this->assertEquals($compilation, '<?php if (!is_scalar($a)) { ?> hello <?php } ?>');
+
 		$compilation = $volt->compileString('{% if a is iterable %} hello {% endif %}');
 		$this->assertEquals($compilation, '<?php if ((is_array($a) || ($a) instanceof Traversable)) { ?> hello <?php } ?>');
+
+		$compilation = $volt->compileString('{% if a is not iterable %} hello {% endif %}');
+		$this->assertEquals($compilation, '<?php if (!(is_array($a) || ($a) instanceof Traversable)) { ?> hello <?php } ?>');
 
 		$compilation = $volt->compileString('{% if a is sameas(false) %} hello {% endif %}');
 		$this->assertEquals($compilation, '<?php if (($a) === (false)) { ?> hello <?php } ?>');
@@ -1072,6 +1087,9 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 		$compilation = $volt->compileString('{% cache somekey %} hello {% endcache %}');
 		$this->assertEquals($compilation, '<?php $_cache[$somekey] = $this->di->get(\'viewCache\'); $_cacheKey[$somekey] = $_cache[$somekey]->start($somekey); if ($_cacheKey[$somekey] === null) { ?> hello <?php $_cache[$somekey]->save($somekey); } else { echo $_cacheKey[$somekey]; } ?>');
 
+		$compilation = $volt->compileString('{% set lifetime = 500 %}{% cache somekey lifetime %} hello {% endcache %}');
+		$this->assertEquals($compilation, '<?php $lifetime = 500; ?><?php $_cache[$somekey] = $this->di->get(\'viewCache\'); $_cacheKey[$somekey] = $_cache[$somekey]->start($somekey, $lifetime); if ($_cacheKey[$somekey] === null) { ?> hello <?php $_cache[$somekey]->save($somekey, null, $lifetime); } else { echo $_cacheKey[$somekey]; } ?>');
+
 		$compilation = $volt->compileString('{% cache somekey 500 %} hello {% endcache %}');
 		$this->assertEquals($compilation, '<?php $_cache[$somekey] = $this->di->get(\'viewCache\'); $_cacheKey[$somekey] = $_cache[$somekey]->start($somekey, 500); if ($_cacheKey[$somekey] === null) { ?> hello <?php $_cache[$somekey]->save($somekey, null, 500); } else { echo $_cacheKey[$somekey]; } ?>');
 
@@ -1083,21 +1101,23 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 		$compilation = $volt->compileString('{# some comment #}{{ "hello" }}{# other comment }}');
 		$this->assertEquals($compilation, "<?php echo 'hello'; ?>");
 
-		//
-
+		//Autoescape from options
+		$volt->setOption("autoescape", true);
+		$compilation = $volt->compileString('{{ "hello" }}{% autoescape true %}{{ "hello" }}{% autoescape false %}{{ "hello" }}{% endautoescape %}{{ "hello" }}{% endautoescape %}{{ "hello" }}');
+		$this->assertEquals($compilation, "<?php echo \$this->escaper->escapeHtml('hello'); ?><?php echo \$this->escaper->escapeHtml('hello'); ?><?php echo 'hello'; ?><?php echo \$this->escaper->escapeHtml('hello'); ?><?php echo \$this->escaper->escapeHtml('hello'); ?>");
 	}
 
 	public function testVoltUsersFunctions()
 	{
 
-		$volt = new \Phalcon\Mvc\View\Engine\Volt\Compiler();
+		$volt = new Compiler();
 
 		//Single string function
 		$volt->addFunction('random', 'mt_rand');
 
 		//Function with closure
 		$volt->addFunction('shuffle', function($arguments, $exprArguments){
-			return 'str_shuffle('.$arguments.')';
+			return 'str_shuffle(' . $arguments . ')';
 		});
 
 		$compilation = $volt->compileString('{{ random() }}');
@@ -1111,7 +1131,7 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 	public function testVoltUsersFilters()
 	{
 
-		$volt = new \Phalcon\Mvc\View\Engine\Volt\Compiler();
+		$volt = new Compiler();
 
 		//Single string filter
 		$volt->addFilter('reverse', 'strrev');
@@ -1133,7 +1153,7 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 	{
 		@unlink('unit-tests/views/layouts/test10.volt.php');
 
-		$volt = new \Phalcon\Mvc\View\Engine\Volt\Compiler();
+		$volt = new Compiler();
 
 		//Simple file
 		$volt->compileFile('unit-tests/views/layouts/test10.volt', 'unit-tests/views/layouts/test10.volt.php');
@@ -1150,7 +1170,7 @@ Clearly, the song is: <?php echo $this->getContent(); ?>.
 		@unlink('unit-tests/views/test10/children2.volt.php');
 		@unlink('unit-tests/views/test10/parent.volt%%e%%.php');
 
-		$volt = new \Phalcon\Mvc\View\Engine\Volt\Compiler();
+		$volt = new Compiler();
 
 		//With blocks and extending
 		$volt->compile('unit-tests/views/test10/children.volt');
@@ -1158,7 +1178,7 @@ Clearly, the song is: <?php echo $this->getContent(); ?>.
 		$compilation = file_get_contents('unit-tests/views/test10/children.volt.php');
 		$this->assertEquals($compilation, '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"><html lang="en"><html xmlns="http://www.w3.org/1999/xhtml"><head><style type="text/css">.important { color: #336699; }</style><title>Index - My Webpage</title></head><body><div id="content"><h1>Index</h1><p class="important">Welcome on my awesome homepage.</p></div><div id="footer">&copy; Copyright 2012 by <a href="http://domain.invalid/">you</a>.</div></body>');
 
-		//with blocks and two-ways blocks
+		//with blocks and two-way blocks
 		$volt->compile('unit-tests/views/test10/children2.volt');
 
 		$compilation = file_get_contents('unit-tests/views/test10/children2.volt.php');
@@ -1173,7 +1193,7 @@ Clearly, the song is: <?php echo $this->getContent(); ?>.
 		@unlink('unit-tests/views/templates/b.volt%%e%%.php');
 		@unlink('unit-tests/views/templates/c.volt.php');
 
-		$volt = new \Phalcon\Mvc\View\Engine\Volt\Compiler();
+		$volt = new Compiler();
 
 		//With blocks and extending
 		$volt->compile('unit-tests/views/templates/c.volt');
@@ -1192,7 +1212,7 @@ Clearly, the song is: <?php echo $this->getContent(); ?>.
 		$view = new Phalcon\Mvc\View();
 		$view->setViewsDir('unit-tests/views/');
 
-		$volt = new \Phalcon\Mvc\View\Engine\Volt\Compiler($view);
+		$volt = new Compiler($view);
 
 		//extends
 		$volt->compileFile('unit-tests/views/test10/children.extends.volt', 'unit-tests/views/test10/children.extends.volt.php');
@@ -1264,7 +1284,7 @@ Clearly, the song is: <?php echo $this->getContent(); ?>.
 		$volt->render('unit-tests/views/test10/index.volt', array('song' => 'Lights'), true);
 		$view->finish();
 
-		$path = 'unit-tests/cache/'.phalcon_prepare_virtual_path(realpath("unit-tests/"), ".").'.views.test10.index.volt.compiled';
+		$path = 'unit-tests/cache/' . phalcon_prepare_virtual_path(realpath("unit-tests/"), ".") . '.views.test10.index.volt.compiled';
 
 		$this->assertTrue(file_exists($path));
 		$this->assertEquals(file_get_contents($path), 'Hello <?php echo $song; ?>!');
@@ -1359,5 +1379,4 @@ Clearly, the song is: <?php echo $this->getContent(); ?>.
 
 		$this->assertEquals($view->getContent(), 'Length Array: 4Length Object: 4Length String: 5Length No String: 4Slice Array: 1,2,3,4Slice Array: 2,3Slice Array: 1,2,3Slice Object: 2,3,4Slice Object: 2,3Slice Object: 1,2Slice String: helSlice String: elSlice String: lloSlice No String: 123Slice No String: 23Slice No String: 34');
 	}
-
 }
